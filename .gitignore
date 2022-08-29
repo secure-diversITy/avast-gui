@@ -1,0 +1,8 @@
+/dl.url
+*.deb
+*.zst
+src/*
+pkg/*
+*.sig
+*.svg
+*.png

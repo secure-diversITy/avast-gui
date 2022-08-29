@@ -1,0 +1,129 @@
+#!/bin/bash
+####################################################################
+#
+# Unofficial GUI for Avast
+#
+####################################################################
+VER=%VER%
+GICON=/usr/share/avast-gui/icon-transp.png
+GICONBIZ=/usr/share/avast-gui/icon-biz.svg
+TITLE="Avast Antivirus for Linux (unofficial UI)"
+DEBUG=1
+
+ARG=$1
+
+MAINPID=$$
+[ $DEBUG -eq 1 ] && echo "mainpid $MAINPID"
+
+# main window
+F_MAIN(){
+    export $(systemctl show avast --no-page |grep ActiveState)
+    export $(systemctl show avast --no-page |grep SubState)
+
+    ANS=$1
+
+    case "$SubState" in
+        running) SVCSTATE="<span color='#009933'>$ActiveState/$SubState</span>"
+        ;;
+        *) SVCSTATE="<span color='#CC2222'>$ActiveState/$SubState</span>"
+        ;;
+    esac
+
+    # grab current versions
+    VPSVER=$(scan -V)
+    AVVER=$(avast -V)
+
+    # check if we have a notify running already
+    ps aux | grep -v grep | grep -q AvastAntivirusforLinuxNotify
+    NOTIFY=$?
+
+    YADPID=99
+    if [ $NOTIFY -ne 0 ];then
+       if [ "$ANS" != "11" ];then
+           [ $DEBUG -eq 1 ] && echo "background notification started"
+           yad --notification --image=$GICON \
+                --menu='Scan!avast-gui scan|Update!avast-gui update|Settings!avast-gui settings|Exit!quit' \
+                --command='/bin/sh -c avast-gui' \
+                --icon-size=16 --no-middle --text=AvastAntivirusforLinuxNotify --auto-kill &
+            YADPID=$!
+            [ $DEBUG -eq 1 ] && echo Notify started with $YADPID
+        else
+            [ $DEBUG -eq 1 ] && echo "foreground notification started"
+            yad --notification --image=$GICON \
+                --menu='Scan!avast-gui scan|Update!avast-gui update|Settings!avast-gui settings|Exit!quit' \
+                --command='avast-gui 0' \
+                --icon-size=16 --no-middle --text=AvastAntivirusforLinuxNotify --auto-kill
+            return 252
+        fi
+    else
+        [ $DEBUG -eq 1 ] && echo "quit bc notify is set already"
+        #exit 252
+    fi
+    if [ "$ANS" != "11" ];then
+        [ $DEBUG -eq 1 ] && echo "main window started"
+        yad --icon=$GICON --image=$GICONBIZ --title="$TITLE" \
+            --item-width="100" --width="530" --height="300" \
+           --icons --read-dir=/usr/share/avast-gui/desktopfiles --auto-kill \
+            --text="\
+  <b>Avast:</b> v${AVVER}\ / <b>GUI:</b> v${VER}\n\
+  <b>Service: <i><span color='#CC2222'>$SVCSTATE</span></i></b>\n\
+  <b>Local Virus Database:</b> $VPSVER\n\n\
+<b>Double click</b> an item to perform an action:"\
+            --icon-size=64 \
+            --button="Hide:11"
+        ANS=$?
+    else
+        [ $DEBUG -eq 1 ] && echo "skipping main window bc ANS = $ANS"
+        exit
+    fi
+    [ $DEBUG -eq 1 ] && echo "ANS: $ANS, PID: $YADPID"
+    [ "$YADPID" -ne 99 ] && kill $YADPID
+    return $ANS
+}
+
+# settings window
+F_SETTINGS(){
+    yad --icon=$GICON --height=200 --width=400 --title="$TITLE" --text="\n\n\t\t$FUNCNAME coming soon"
+}
+
+# update window
+F_UPDATE(){
+    yad --icon=$GICON --height=200 --width=400 --title="$TITLE" --text="\n\n\t\t$FUNCNAME coming soon"
+}
+
+# scan window
+F_SCAN(){
+    yad --icon=$GICON --height=200 --width=400 --title="$TITLE" --text="\n\n\t\t$FUNCNAME coming soon"
+}
+
+# license window
+F_LIC(){
+    yad --icon=$GICON --height=200 --width=400 --title="$TITLE" --text="\n\n\t\t$FUNCNAME coming soon"
+}
+
+case $ARG in
+    settings) F_SETTINGS
+    ;;
+    update) F_UPDATE
+    ;;
+    scan) F_SCAN
+    ;;
+    license) F_LIC
+    ;;
+    *)  MARG=$1
+        while true ;do
+            [ $DEBUG -eq 1 ] && echo "starting F_MAIN with $MARG"
+            F_MAIN $MARG
+            RET=$?
+            [ $DEBUG -eq 1 ] && echo RET is $RET
+            if [ $RET -eq 252 ];then
+                pkill -P $$
+                #[ $$ != $MAINPID ] && 
+                kill $MAINPID
+                break
+            fi
+            MARG=$RET
+        done
+    ;;
+esac
+

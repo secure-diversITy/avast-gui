@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Settings
+Exec=/usr/bin/avast-gui settings
+Type=Application
+Categories=System;Security
+Terminal=false
+Encoding=UTF-8
+Icon=/usr/share/avast-gui/icon-transp.png
+DBusActivatable=true
+NoDisplay=false

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Scan
+Exec=/usr/bin/avast-gui scan
+Type=Application
+Categories=System;Security
+Terminal=false
+Encoding=UTF-8
+Icon=/usr/share/avast-gui/icon-transp.png
+DBusActivatable=true
+NoDisplay=false

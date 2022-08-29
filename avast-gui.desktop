@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=Avast Antivirus UI
+Exec=/usr/bin/avast-gui
+Type=Application
+Categories=System;Security
+Terminal=false
+Encoding=UTF-8
+Icon=/usr/share/avast-gui/icon-transp.png
