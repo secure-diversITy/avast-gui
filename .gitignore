@@ -4,5 +4,3 @@
 src/*
 pkg/*
 *.sig
-*.svg
-*.png
