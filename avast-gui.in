@@ -5,8 +5,8 @@
 #
 ####################################################################
 VER=%VER%
-GICON=/usr/share/avast-gui/icon-transp.png
-GICONBIZ=/usr/share/avast-gui/icon-biz.svg
+GICON=/usr/share/avast-gui/icons/icon-transp.png
+GICONBIZ=/usr/share/avast-gui/icons/icon-biz.svg
 TITLE="Avast Antivirus for Linux (unofficial UI)"
 DEBUG=1
 
@@ -17,17 +17,7 @@ MAINPID=$$
 
 # main window
 F_MAIN(){
-    export $(systemctl show avast --no-page |grep ActiveState)
-    export $(systemctl show avast --no-page |grep SubState)
-
     ANS=$1
-
-    case "$SubState" in
-        running) SVCSTATE="<span color='#009933'>$ActiveState/$SubState</span>"
-        ;;
-        *) SVCSTATE="<span color='#CC2222'>$ActiveState/$SubState</span>"
-        ;;
-    esac
 
     # grab current versions
     VPSVER=$(scan -V)
@@ -63,10 +53,10 @@ F_MAIN(){
         [ $DEBUG -eq 1 ] && echo "main window started"
         yad --icon=$GICON --image=$GICONBIZ --title="$TITLE" \
             --item-width="100" --width="530" --height="300" \
-           --icons --read-dir=/usr/share/avast-gui/desktopfiles --auto-kill \
+            --icons --read-dir=/usr/share/avast-gui/desktopfiles --auto-kill \
             --text="\
   <b>Avast:</b> v${AVVER}\ / <b>GUI:</b> v${VER}\n\
-  <b>Service: <i><span color='#CC2222'>$SVCSTATE</span></i></b>\n\
+  <b>Service: $AVAST_STATE</b>\n\
   <b>Local Virus Database:</b> $VPSVER\n\n\
 <b>Double click</b> an item to perform an action:"\
             --icon-size=64 \
@@ -101,15 +91,67 @@ F_LIC(){
     yad --icon=$GICON --height=200 --width=400 --title="$TITLE" --text="\n\n\t\t$FUNCNAME coming soon"
 }
 
+F_STATE(){
+    unset RESTFOR
+    # grab current versions
+    VPSVER=$(scan -V)
+    AVVER=$(avast -V)
+
+    # get service states
+    ACT_AVAST=$(systemctl show avast --no-page |grep ActiveState | cut -d "=" -f 2)
+    SUB_AVAST=$(systemctl show avast --no-page |grep SubState | cut -d "=" -f 2)
+    ACT_FSS=$(systemctl show avast-fss --no-page |grep ActiveState | cut -d "=" -f 2)
+    SUB_FSS=$(systemctl show avast-fss --no-page |grep SubState | cut -d "=" -f 2)
+    ACT_VPS=$(systemctl show avast-vpsupdate.timer --no-page |grep ActiveState | cut -d "=" -f 2)
+    SUB_VPS=$(systemctl show avast-vpsupdate.timer --no-page |grep SubState | cut -d "=" -f 2)
+    pacman -Q avast-rest 2>&1 > /dev/null
+    if [ $? -eq 0 ];then
+        ACT_REST=$(systemctl show avast-rest --no-page |grep ActiveState | cut -d "=" -f 2)
+        SUB_REST=$(systemctl show avast-rest --no-page |grep SubState | cut -d "=" -f 2)
+        RESTFOR="${ACT_REST}:${SUB_REST}:REST"
+    else
+        REST_STATE="not installed"
+    fi
+
+    for st in ${ACT_AVAST}:${SUB_AVAST}:AVAST ${ACT_FSS}:${SUB_FSS}:FSS $ACT_VPS:${SUB_VPS}:VPS $RESTFOR; do
+        AST=$(echo "$st" | cut -d ":" -f 1)
+        SST=$(echo "$st" | cut -d ":" -f 2)
+        N=$(echo "$st" | cut -d ":" -f 3)
+        if [ ${SST} == "running" ]||[ ${SST} == "waiting" ];then
+            declare ${N}_STATE="<span color='#009933'>${AST}/${SST}</span>"
+        else
+            declare ${N}_STATE="<span color='#CC2222'>${AST}/${SST}</span>"
+        fi
+    done
+
+    yad --icon=$GICON --height=100 --width=400 --title='Service States' \
+        --text="\n\n\
+\t<b>Avast version:</b>\t\t${AVVER}\n\
+\t<b>VPS version:</b>\t\t\t${VPSVER}\n\n\n\
+\t<b>Avast Service:</b>\t\t\t${AVAST_STATE}\n\n\
+\t<b>File Server Shield:</b>\t\t${FSS_STATE}\n\n\
+\t<b>VPS Updater:</b>\t\t\t${VPS_STATE}\n\n\
+\t<b>REST Service:</b>\t\t\t${REST_STATE}"\
+        --button=Close
+}
+
+F_ABOUT(){
+    yad --icon=$GICON --height=200 --width=400 --title="$TITLE" --text="\n\n\t\t$FUNCNAME coming soon"
+    # services: <a target="_blank" href="https://icons8.com/icon/Gkju9C9xs2XV/dienstleistungen">Dienstleistungen</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+    # settings: <a target="_blank" href="https://icons8.com/icon/AuMLFRmG95tQ/bearbeiten">Bearbeiten</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+    # update: <a target="_blank" href="https://icons8.com/icon/F3gTbetqcmoM/synchronisieren">Synchronisieren</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+    # scan: <a target="_blank" href="https://icons8.com/icon/3159/suche">Suche</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+    # about: <a target="_blank" href="https://icons8.com/icon/42SQTTISIN17/info">Info</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+    # license: <a target="_blank" href="https://icons8.com/icon/ljgEvPDgyC3y/scrollen">Scrollen</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a> 
+}
+
 case $ARG in
-    settings) F_SETTINGS
-    ;;
-    update) F_UPDATE
-    ;;
-    scan) F_SCAN
-    ;;
-    license) F_LIC
-    ;;
+    settings) F_SETTINGS ;;
+    update) F_UPDATE ;;
+    scan) F_SCAN ;;
+    license) F_LIC ;;
+    state) F_STATE ;;
+    about) F_ABOUT ;;
     *)  MARG=$1
         while true ;do
             [ $DEBUG -eq 1 ] && echo "starting F_MAIN with $MARG"

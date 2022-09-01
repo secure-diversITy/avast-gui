@@ -5,6 +5,6 @@ Type=Application
 Categories=System;Security
 Terminal=false
 Encoding=UTF-8
-Icon=/usr/share/avast-gui/icon-transp.png
+Icon=/usr/share/avast-gui/icons/settings.svg
 DBusActivatable=true
 NoDisplay=false

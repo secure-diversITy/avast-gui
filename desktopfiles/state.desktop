@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=Scan
-Exec=/usr/bin/avast-gui scan
+Name=Service States
+Exec=/usr/bin/avast-gui state
 Type=Application
 Categories=System;Security
 Terminal=false
 Encoding=UTF-8
-Icon=/usr/share/avast-gui/icons/scan.svg
+Icon=/usr/share/avast-gui/icons/services.svg
 DBusActivatable=true
 NoDisplay=false

@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=Scan
-Exec=/usr/bin/avast-gui scan
+Name=About
+Exec=/usr/bin/avast-gui about
 Type=Application
 Categories=System;Security
 Terminal=false
 Encoding=UTF-8
-Icon=/usr/share/avast-gui/icons/scan.svg
+Icon=/usr/share/avast-gui/icons/about.svg
 DBusActivatable=true
 NoDisplay=false
